@@ -130,3 +130,5 @@ dmypy.json
 
 # file names
 con_config.py
+test.py
+.vscode/
