@@ -1,0 +1,2 @@
+Stock,Initial_Portfolio,Total Open,Total Closed,Total Won,Total Lost,Strike Rate,Win Streak,Losing Streak,PnL Net,SQN,drawdown,moneydown,len_drawdown,max_drawdown,max_moneydown,max_len_drawdown,sharper
+ZEEL,100000.0,1,1,1,0,100.0,1,0,43877.45,0,1.9162794012843636,3920.772886872728,250,8.934874658130292,13231.254570543853,868,5.06
