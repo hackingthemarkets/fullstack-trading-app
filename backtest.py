@@ -18,18 +18,14 @@ class OpeningRangeBreakout(bt.Strategy):
     )
 
     def __init__(self):
-        self.opening_range_low = 0
-        self.opening_range_high = 0
-        self.opening_range = 0
         self.bought_today = False
         self.order = None
         self.crossovers = []
+        self.opening_range_low = {}
+        self.opening_range_high = {}
+        self.bought_today = {}
+        self.opening_range = {}
         
-        # for d in self.datas: 
-        #     ma_fast = bt.ind.SMA(d, period = self.params.fast_length)
-        #     ma_slow = bt.ind.SMA(d, period = self.params.slow_length)
-            
-        #     self.crossovers.append(bt.ind.CrossOver(ma_fast, ma_slow))
            
     def log(self, txt, dt=None):
         if dt is None:
@@ -57,15 +53,11 @@ class OpeningRangeBreakout(bt.Strategy):
         self.order = None
 
     def next(self):
-        self.opening_range_low = {}
-        self.opening_range_high = {}
-        self.bought_today = {}
-        self.opening_range = {}
         for i, d in enumerate(self.datas):
             current_bar_datetime = d.num2date(d.datetime[0])
             previous_bar_datetime = d.num2date(d.datetime[-1])
 
-            if current_bar_datetime.date() != previous_bar_datetime.date():
+            if (current_bar_datetime.date() != previous_bar_datetime.date()) :
                 self.opening_range_low[i] = d.low[0]
                 self.opening_range_high[i] = d.high[0]
                 self.bought_today[i] = False
@@ -75,12 +67,11 @@ class OpeningRangeBreakout(bt.Strategy):
                 timedelta(minutes=self.p.num_opening_bars * 5)
             opening_range_end_time = dt.time()
 
+            
             if (current_bar_datetime.time() >= opening_range_start_time) \
                     and (current_bar_datetime.time() < opening_range_end_time):
-                self.opening_range_high[i] = max(
-                    d.high[0], self.opening_range_high[i])
-                self.opening_range_low[i] = min(
-                    d.low[0], self.opening_range_low[i])
+                self.opening_range_high[i] = max(d.high[0], self.opening_range_high[i])
+                self.opening_range_low[i] = min(d.low[0], self.opening_range_low[i])
                 self.opening_range[i] = self.opening_range_high[i] - self.opening_range_low[i]
             else:
 
@@ -104,15 +95,6 @@ class OpeningRangeBreakout(bt.Strategy):
     def stop(self):
         self.roi = (self.broker.get_value() / 100000) - 1.0
 
-        # self.log('(Num Opening Bars %2d) Ending Value %.2f ROI %.2f' %
-        #          (self.params.num_opening_bars, self.broker.getvalue(), self.roi))
-
-        # if self.broker.getvalue() > 130000:
-        #     # self.log("*** BIG WINNER ***")
-
-        # if self.broker.getvalue() < 70000:
-        #     # self.log("*** MAJOR LOSER ***")
-
 
 if __name__ == '__main__':
 
@@ -120,6 +102,7 @@ if __name__ == '__main__':
     # Getting the rootpath of the working directory
     # working_dir = rootpath.detect(__file__)
     working_dir = "C:\\Users\\40100147\\Abhishek\\Projects\\fullstack-trading-app"
+    print("working_dir", working_dir)
     nifty50_path = os.path.join(working_dir, "data\\nifty50.csv")
     outputpath = os.path.join(working_dir, "data\\result_df_2.csv")
     nifty50 = pd.read_csv(nifty50_path, header=0, sep='\t')
@@ -131,7 +114,7 @@ if __name__ == '__main__':
             from ( 
             select tradingsymbol, avg(Volume) as volume
             from equities.candlestick
-            where candle_date_time >= '01-01-2020'
+            where candle_date_time >= '01-15-2021'
             and cast(candle_date_time as time(0)) > '09:30:00'
             and cast(candle_date_time as time(0)) < '15:30:00'
             and candle_length = '5minute'
@@ -147,8 +130,8 @@ if __name__ == '__main__':
         query = f"""--sql
                 select *
                 from equities.candlestick
-                where candle_date_time >= '01-10-2020'
-                and cast(candle_date_time as time(0)) > '09:30:00'
+                where candle_date_time >= '01-15-2021'
+                and cast(candle_date_time as time(0)) >= '09:30:00'
                 and cast(candle_date_time as time(0)) <= '15:30:00'
                 and tradingsymbol = '{stock}'
                 and candle_length = '5minute';
@@ -188,18 +171,20 @@ if __name__ == '__main__':
     printsqn = printSQN(firstStrat.analyzers.sqn.get_analysis())
     printdrawdown = printDrawDown(firstStrat.analyzers.ddown.get_analysis())
     printsharpe = printSharpeR(firstStrat.analyzers.sharper.get_analysis())
-    temp_list = [stock] + [initial_cash] + print_list[1] + print_list[3] + \
+    temp_list = [initial_cash] + print_list[1] + print_list[3] + \
                 [printsqn] + printdrawdown[1] + [printsharpe]
     # Get final portfolio Value
     portvalue = cerebro.broker.getvalue()
 
     # Print out the final result
     print('Final Portfolio Value: ${}'.format(portvalue))
-    # cerebro.run()
     # cerebro.plot()
     result_df.append(temp_list)
-    resut_df = pd.DataFrame(result_df, columns = ['Stock','Initial_Portfolio','Total Open', 'Total Closed', 'Total Won', 'Total Lost',
+    resut_df = pd.DataFrame(result_df, columns = ['Initial_Portfolio','Total Open', 'Total Closed', 'Total Won', 'Total Lost',
                                                 'Strike Rate','Win Streak', 'Losing Streak', 'PnL Net','SQN',
                                                 'drawdown', 'moneydown', 'len_drawdown', 'max_drawdown','max_moneydown','max_len_drawdown',
                                                 'sharper'])    
     resut_df.to_csv(outputpath,index=False)
+
+
+
